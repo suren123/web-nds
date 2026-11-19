@@ -20,7 +20,7 @@
 - `dist/emulator.mjs`、`nds-worker.js`：NDS 内核适配。
 - `dist/storage.mjs`、`sw.js`：本地游戏、存档及离线缓存。
 - `dist/core/`：开源内核、对应源码和许可。
-- `.openai/hosting.json`：现有 Site 的发布标识，更新时保持不变。
+- `.github/workflows/pages.yml`：GitHub Pages 自动测试与部署。
 
 ## 版本与发布
 
@@ -28,7 +28,7 @@
 
 `v0.1.0` 保存已运行的网页 v6 基线。`v0.2.0` 对应网页 v7，新增四个自定义圆键、分组尺寸、网格吸附与多选排列。`v0.2.1` 对应网页 v8。`v0.2.2` 对应网页 v9，项目更名为 Web NDS 并修正 Safari 旋转布局。可用 Git 对比和回退。
 
-主开发目录为 `/workspace/web-nds`。原 `/workspace/sites/court-touch-lab` 作为现有 Sites 仓库的发布镜像；发布时同步已提交源码，推送镜像仓库后部署。两者提交历史独立，不执行强制推送。
+主开发目录为 `/workspace/web-nds`。唯一部署目标为 GitHub Pages，推送 `main` 后由 GitHub Actions 自动发布。
 
 当前网址：https://suren123.github.io/web-nds/
 
@@ -59,5 +59,3 @@
 ## GitHub Pages
 
 推送 main 后自动测试并将 dist/ 发布到 https://suren123.github.io/web-nds/ 。部署工作流为 `.github/workflows/pages.yml`，无需额外构建。
-
-旧站与 GitHub Pages 的本地存储独立：迁移时先在旧站导出布局 JSON、游戏存档 .dsv，再在新站导入并重新选择本地游戏文件。
