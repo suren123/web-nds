@@ -1,5 +1,5 @@
-const CACHE='court-nds-offline-v8-20261119-rename';
-const FILES=['index.html','update.html','style.css?v=8','app.mjs?v=8','layout.mjs?v=8','editor.mjs?v=8','emulator.mjs','storage.mjs','nds-worker.js','audio-worklet.js','core/nds.js','core/nds.wasm','core/LICENSE.txt','core/NOTICE.html','manifest.webmanifest','icon-192.png','icon-512.png'];
+const CACHE='court-nds-offline-v9-20261119-viewport';
+const FILES=['index.html','update.html','style.css?v=9','app.mjs?v=9','layout.mjs?v=9','editor.mjs?v=9','viewport.mjs?v=9','emulator.mjs','storage.mjs','nds-worker.js','audio-worklet.js','core/nds.js','core/nds.wasm','core/LICENSE.txt','core/NOTICE.html','manifest.webmanifest','icon-192.png','icon-512.png'];
 const urls=FILES.map(p=>new URL(p,self.registration.scope).href);
 self.addEventListener('install',e=>e.waitUntil((async()=>{const cache=await caches.open(CACHE);for(const url of urls){const r=await fetch(new Request(url,{cache:'reload',credentials:'same-origin'}));if(!r.ok||r.redirected||new URL(r.url).origin!==self.location.origin)throw Error('离线资源未能获取');if(url.endsWith('.wasm')){const bytes=await r.clone().arrayBuffer();if(new DataView(bytes).getUint32(0)!==0x0061736d)throw Error('无效的模拟器文件');}await cache.put(url,r);}await self.skipWaiting();})()));
 self.addEventListener('activate',e=>e.waitUntil((async()=>{for(const k of await caches.keys())if(k.startsWith('court-nds-offline-')&&k!==CACHE)await caches.delete(k);await self.clients.claim();})()));

@@ -1,9 +1,14 @@
-import {objectFor,geometry,snapPosition,alignControls,arrangeEight,placeAddedControls} from './editor.mjs?v=8';
+import {installViewport} from './viewport.mjs?v=9';
+import {objectFor,geometry,snapPosition,alignControls,arrangeEight,placeAddedControls} from './editor.mjs?v=9';
 import {NDSEngine} from './emulator.mjs';
 import {dbGet,dbPut,dbDelete,romIdentity} from './storage.mjs';
-import {W,H,DEFAULT,clone,rects,screens,expanded,contains,conflicts,hit,inputsAt,held,deltaMapping,validState,arrangeRows,applyOpacity,applySizes,CUSTOM_IDS,MENU_IDS,ASSIGNABLE} from './layout.mjs?v=8';
+import {W,H,DEFAULT,clone,rects,screens,expanded,contains,conflicts,hit,inputsAt,held,deltaMapping,validState,arrangeRows,applyOpacity,applySizes,CUSTOM_IDS,MENU_IDS,ASSIGNABLE} from './layout.mjs?v=9';
 const $=s=>document.querySelector(s),board=$('#board'),STORAGE='court-touch-layout-v1',controlLayers=new Map();
 let ctx=board.getContext('2d');
+// Keep backing buffers independent of Safari's animated viewport. CSS scales the canvas.
+const renderRatio=Math.min(globalThis.devicePixelRatio||1,2);
+board.width=Math.round(W*renderRatio);board.height=Math.round(H*renderRatio);
+const viewport=installViewport({onResize:()=>release()});
 if(/iPhone/i.test(navigator.userAgent||''))document.body.classList.add('iphone');
 let state=clone(DEFAULT),selected='dpad',targets=false,editing=false,pointers=new Map(),keys=new Set(),history=[],drag=null,saveTimer,toastTimer,active=new Set(),scale=1,guides=[],multi=new Set(),multiMode=false;
 try{const saved=localStorage.getItem(STORAGE);if(saved){const raw=JSON.parse(saved);state=validState(raw);if(raw.version<3)placeAddedControls(state);if(raw.version===1){history.push(clone(state));arrangeRows(state);}}}catch{}
@@ -18,10 +23,10 @@ function updated(){release();$('#hideBottom').textContent=state.hideBottom?'显�
 function swap(){remember();release();state.hideBottom=false;state.swapped=!state.swapped;$('#hideBottom').textContent='隐藏下屏';save();toast(state.swapped?'下屏放大，触控区域已移到大屏':'上屏放大，触控区域已移到小屏');}
 function openPanel(){release();if(engine.running){engine.pause();resumeAfterPanel=true;}document.body.classList.add('panel');syncControls();}
 $('#open').onclick=openPanel;$('#exitFocus').onclick=()=>{document.body.classList.remove('focus');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});openPanel();};
-$('#close').onclick=()=>{document.body.classList.remove('panel');editing=false;multiMode=false;$('#move').setAttribute('aria-pressed','false');release();if(resumeAfterPanel){if(engine.loaded)document.body.classList.add('focus');engine.resume();resumeAfterPanel=false;}};
+$('#close').onclick=()=>{document.body.classList.remove('panel');editing=false;multiMode=false;$('#move').setAttribute('aria-pressed','false');release();if(resumeAfterPanel){if(engine.loaded)document.body.classList.add('focus');viewport.anchor();engine.resume();resumeAfterPanel=false;}};
 $('#targets').onclick=()=>{targets=!targets;$('#targets').setAttribute('aria-pressed',targets);};
 $('#move').onclick=()=>{editing=!editing;release();if(editing){engine.pause();}else if(engine.loaded){engine.resume();}$('#move').setAttribute('aria-pressed',editing);toast(editing?'拖动按键或屏幕来挪位置；ABXY 每个键都能独立移动，可拖到画面上':'已切回试按模式');};
-$('#focus').onclick=()=>{release();if(engine.loaded)engine.resume();editing=false;$('#move').setAttribute('aria-pressed','false');document.body.classList.remove('panel');document.body.classList.add('focus');if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});};
+$('#focus').onclick=()=>{release();if(engine.loaded)engine.resume();editing=false;$('#move').setAttribute('aria-pressed','false');document.body.classList.remove('panel');document.body.classList.add('focus');viewport.anchor();if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});};
 $('#swap').onclick=swap;
 $('#rows').onclick=()=>{remember();arrangeRows(state);updated();syncControls();toast('ABXY 已排成两行，其他按键保持原位');};
 $('#allOpacity').addEventListener('pointerdown',remember);$('#allOpacity').addEventListener('keydown',e=>{if(!e.repeat)remember();});$('#allOpacity').oninput=e=>{const n=Number(e.target.value);if(!Number.isFinite(n))return;applyOpacity(state,Math.max(0,Math.min(100,Math.round(n))));updated();syncControlValues();};
@@ -48,9 +53,9 @@ function syncControls(){const container=$('#controls');container.replaceChildren
   range.addEventListener('pointerdown',remember);range.addEventListener('keydown',e=>{if(!e.repeat)remember();});range.oninput=e=>setValue(key,+e.target.value,min,max);num.onfocus=remember;num.onchange=e=>{setValue(key,Number(e.target.value),min,max);syncControlValues();};dec.onclick=()=>{remember();setValue(key,fieldValue(key)-1,min,max);};inc.onclick=()=>{remember();setValue(key,fieldValue(key)+1,min,max);};wrap.append(head,range);container.append(wrap);
  }syncControlValues();syncEditor();check();}
 function updateReadout(){const o=getObject();let description;if(selected==='dpad')description=`摇杆直径 ${o.size} · 圆形触控直径 ${o.size+2*o.padding}`;else if(['a','b','x','y',...CUSTOM_IDS].includes(selected))description=`圆键直径 ${state.circleSize} · 圆形触控直径 ${state.circleSize+2*o.padding} · 八键大小同步`;else if(['main','mini'].includes(selected))description=`画面 ${o.width} × ${o.width*.75} · 比例 4:3`;else description=`可见 ${o.width} × ${o.height} · ${['l','r'].includes(selected)?'L / R':'顶部四键'}大小同步`;$('#sizeReadout').textContent=description;}
-function exportData(){return {app:'随心掌机',version:3,referenceSize:{width:W,height:H},device:'iPhone 17 Pro landscape',savedAt:new Date().toISOString(),layout:state,deltaMapping:deltaMapping(state),warnings:conflicts(state),note:'网页布局参数；摇杆使用圆形触控。deltaMapping 仅作位置尺寸参考，不包含网页摇杆的圆形触控逻辑。'};}
+function exportData(){return {app:'Web NDS',version:3,referenceSize:{width:W,height:H},device:'iPhone 17 Pro landscape',savedAt:new Date().toISOString(),layout:state,deltaMapping:deltaMapping(state),warnings:conflicts(state),note:'网页布局参数；摇杆使用圆形触控。deltaMapping 仅作位置尺寸参考，不包含网页摇杆的圆形触控逻辑。'};}
 function json(){return JSON.stringify(exportData(),null,2);}
-$('#download').onclick=()=>{const blob=new Blob([json()],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Delta-NDS-我的手感.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);toast('已导出；可把 JSON 文件发回聊天');};
+$('#download').onclick=()=>{const blob=new Blob([json()],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Web-NDS-layout.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);toast('已导出；可把 JSON 文件发回聊天');};
 $('#copy').onclick=async()=>{try{await navigator.clipboard.writeText(json());toast('已复制完整布局参数');}catch{const t=$('#fallback');t.hidden=false;t.value=json();t.focus();t.select();toast('请长按下方文本框，选择全选并复制');}};
 $('#import').onclick=()=>$('#file').click();$('#file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(f.size>200000)throw Error('文件太大，请选择布局 JSON');const raw=JSON.parse(await f.text()),s=validState(raw);if((raw.layout||raw).version<3)placeAddedControls(s);remember();state=s;updated();syncControls();toast('布局已导入');}catch(err){toast(err.message||'无法读取此文件');}e.target.value='';};
 function point(e){const r=board.getBoundingClientRect();return {x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};}
@@ -61,7 +66,7 @@ board.addEventListener('pointermove',e=>{if(editing&&drag?.id===e.pointerId){con
 for(const type of ['pointerup','pointercancel','lostpointercapture'])board.addEventListener(type,e=>{pointers.delete(e.pointerId);if(drag?.id===e.pointerId){drag=null;guides=[];}updateActive();});
 for(const type of ['touchstart','touchmove','touchend','gesturestart','gesturechange','gestureend'])board.addEventListener(type,e=>{if(e.cancelable)e.preventDefault();if(type==='touchstart')window.getSelection?.()?.removeAllRanges();},{passive:false});
 for(const type of ['contextmenu','selectstart','dragstart'])document.addEventListener(type,e=>{if(!e.target?.closest?.('input,textarea,[contenteditable=true]'))e.preventDefault();});
-window.addEventListener('blur',release);document.addEventListener('visibilitychange',()=>{if(document.hidden)release();});window.addEventListener('resize',release);
+window.addEventListener('blur',release);document.addEventListener('visibilitychange',()=>{if(document.hidden)release();});
 const keyboard={Shift:'select',ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',z:'b',x:'a',a:'y',s:'x',q:'l',w:'r',Enter:'start'};
 window.addEventListener('keydown',e=>{if(e.key==='Escape'){document.body.classList.remove('focus','panel');editing=false;$('#move').setAttribute('aria-pressed',false);release();return;}if($('#gameDialog').open||document.body.classList.contains('panel')||editing||['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;const k=keyboard[e.key];if(k){e.preventDefault();keys.add(k);updateActive();}});window.addEventListener('keyup',e=>{const k=keyboard[e.key];if(k){keys.delete(k);updateActive();}});
 function updateActive(){if(editing)return;active=held(state,pointers.values());for(const k of keys)active.add(k);$('#live').textContent=active.size?'按下：'+[...active].map(k=>inputNames[k]||k.toUpperCase()).join(' + ')+(pointers.size?' · '+pointers.size+' 指':''):'等待按键';let touch=null;for(const p of pointers.values()){const r=hit(state,p);if(r?.touch){touch={x:Math.min(255,Math.max(0,Math.floor((p.x-r.x)/r.width*256))),y:Math.min(191,Math.max(0,Math.floor((p.y-r.y)/r.height*192)))};break;}}engine.setInput(active,touch);}
@@ -69,7 +74,7 @@ function circle(x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ct
 function round(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}}
 function text(t,x,y,size=12,color='#e9f3ed',align='center',weight=500){ctx.fillStyle=color;ctx.font=`${weight} ${size}px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif`;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(t,x,y);}
 function draw(){
- const box=board.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,3);const bw=Math.round(box.width*dpr),bh=Math.round(box.height*dpr);if(board.width!==bw||board.height!==bh){board.width=bw;board.height=bh;}ctx.setTransform(board.width/W,0,0,board.height/H,0,0);scale=box.width/W;$('#scale').textContent='显示比例 '+Math.round(scale*100)+'%';
+ const box=board.getBoundingClientRect();ctx.setTransform(board.width/W,0,0,board.height/H,0,0);scale=box.width/W;const scaleText='显示比例 '+Math.round(scale*100)+'%';if($('#scale').textContent!==scaleText)$('#scale').textContent=scaleText;
  ctx.fillStyle='#102a35';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#1c3d48';ctx.lineWidth=1;for(let x=-H;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,H);ctx.lineTo(x+H,0);ctx.stroke();}
  for(const s of screens(state)){round(s.x-5,s.y-5,s.width+10,s.height+10,8,'#061b24','#2c5260');ctx.fillStyle='#0a2430';ctx.fillRect(s.x,s.y,s.width,s.height);
   ctx.save();ctx.beginPath();ctx.rect(s.x,s.y,s.width,s.height);ctx.clip();

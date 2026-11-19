@@ -1,11 +1,11 @@
 {
-  "name": "suixin-handheld",
-  "version": "0.2.1",
+  "name": "web-nds",
+  "version": "0.2.2",
   "private": true,
   "type": "module",
   "license": "GPL-2.0",
   "scripts": {
-    "test": "node test.mjs && node tests/ui.mjs && node tests/offline.cjs",
+    "test": "node test.mjs && node tests/viewport.mjs && node tests/ui.mjs && node tests/offline.cjs",
     "dev": "python3 -m http.server 4173 --bind 0.0.0.0 --directory dist",
     "package": "python3 scripts/package.py"
   },

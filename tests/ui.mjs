@@ -31,7 +31,12 @@ input('c-circleSize',70);s=await exportState();assert.ok(s.faces.every(f=>f.size
 select('menu');input('c-width',90);s=await exportState();assert.ok(s.buttons.filter(b=>['menu','select','start','swap'].includes(b.id)).every(b=>b.width===90));select('l');input('c-height',48);s=await exportState();assert.ok(s.buttons.filter(b=>['l','r'].includes(b.id)).every(b=>b.height===48));
 input('allOpacity',40);s=await exportState();assert.equal(s.controlsOpacity,40);assert.ok([...s.faces,...s.buttons].every(b=>b.opacity===40));
 el('#eightRows').onclick();s=await exportState();const circles=[...s.faces.map(f=>({...f,width:f.size,height:f.size})),...s.buttons.filter(b=>['comboA','comboB','custom3','custom4'].includes(b.id))];assert.equal(new Set(circles.map(r=>r.y)).size,2);
-frame();const event=(x,y,id=1)=>({clientX:x,clientY:y,pointerId:id,preventDefault(){}}),center=id=>{const b=circles.find(r=>r.id===id);return{x:b.x+b.width/2,y:b.y+b.height/2};};
+frame();const bufferSize=[board.width,board.height];
+// Rotation changes CSS geometry, never the backing store or saved layout coordinates.
+const layoutBeforeRotation=await exportState();
+for(const [width,height]of [[402,185],[650,299],[874,402]]){board.getBoundingClientRect=()=>({left:0,top:0,width,height});frame();assert.deepEqual([board.width,board.height],bufferSize);}
+assert.deepEqual(await exportState(),layoutBeforeRotation);
+const event=(x,y,id=1)=>({clientX:x,clientY:y,pointerId:id,preventDefault(){}}),center=id=>{const b=circles.find(r=>r.id===id);return{x:b.x+b.width/2,y:b.y+b.height/2};};
 await el('#recentROM').onclick();const lastInput=()=>worker.messages.filter(m=>m.type==='input').at(-1);
 const a=center('comboA'),b=center('comboB');board.emit('pointerdown',event(a.x,a.y,1));assert.equal(lastInput().mask,(1<<7)|(1<<10)|(1<<11));board.emit('pointerdown',event(b.x,b.y,2));assert.equal(lastInput().mask,(1<<7)|(1<<6)|(1<<10)|(1<<11));board.emit('pointerup',event(a.x,a.y,1));assert.equal(lastInput().mask,(1<<6)|(1<<10)|(1<<11));board.emit('pointerup',event(b.x,b.y,2));assert.equal(lastInput().mask,0);
 const c=center('custom4');board.emit('pointerdown',event(c.x,c.y,3));assert.equal(lastInput().mask,(1<<8)|(1<<9)|(1<<10));board.emit('pointerup',event(c.x,c.y,3));
@@ -43,3 +48,5 @@ el('#undo').onclick();el('#close').onclick();assert.equal(worker.messages.at(-1)
 const exported=await exportState();el('#file').onchange({target:{files:[{size:1000,async text(){return JSON.stringify({layout:exported});}}],value:''}});await new Promise(r=>setTimeout(r,0));assert.deepEqual(await exportState(),exported);
 frame();console.log('PASS UI: custom checkbox assignment/name, synchronized dimension groups, opacity, eight-key preset, real input bridge/shared release, free dragging, multiselect alignment/undo and JSON round trip');
 
+
+await new Promise(r=>setTimeout(r,200));assert.deepEqual(JSON.parse(savedLayout),await exportState());console.log('PASS local layout persistence and stable canvas buffers through rotation');
