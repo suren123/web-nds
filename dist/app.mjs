@@ -1,7 +1,7 @@
-import {objectFor,geometry,snapPosition,alignControls,arrangeEight,placeAddedControls} from './editor.mjs?v=7';
+import {objectFor,geometry,snapPosition,alignControls,arrangeEight,placeAddedControls} from './editor.mjs?v=8';
 import {NDSEngine} from './emulator.mjs';
 import {dbGet,dbPut,dbDelete,romIdentity} from './storage.mjs';
-import {W,H,DEFAULT,clone,rects,screens,expanded,contains,conflicts,hit,inputsAt,held,deltaMapping,validState,arrangeRows,applyOpacity,applySizes,CUSTOM_IDS,MENU_IDS,ASSIGNABLE} from './layout.mjs?v=7';
+import {W,H,DEFAULT,clone,rects,screens,expanded,contains,conflicts,hit,inputsAt,held,deltaMapping,validState,arrangeRows,applyOpacity,applySizes,CUSTOM_IDS,MENU_IDS,ASSIGNABLE} from './layout.mjs?v=8';
 const $=s=>document.querySelector(s),board=$('#board'),STORAGE='court-touch-layout-v1',controlLayers=new Map();
 let ctx=board.getContext('2d');
 if(/iPhone/i.test(navigator.userAgent||''))document.body.classList.add('iphone');
@@ -48,7 +48,7 @@ function syncControls(){const container=$('#controls');container.replaceChildren
   range.addEventListener('pointerdown',remember);range.addEventListener('keydown',e=>{if(!e.repeat)remember();});range.oninput=e=>setValue(key,+e.target.value,min,max);num.onfocus=remember;num.onchange=e=>{setValue(key,Number(e.target.value),min,max);syncControlValues();};dec.onclick=()=>{remember();setValue(key,fieldValue(key)-1,min,max);};inc.onclick=()=>{remember();setValue(key,fieldValue(key)+1,min,max);};wrap.append(head,range);container.append(wrap);
  }syncControlValues();syncEditor();check();}
 function updateReadout(){const o=getObject();let description;if(selected==='dpad')description=`摇杆直径 ${o.size} · 圆形触控直径 ${o.size+2*o.padding}`;else if(['a','b','x','y',...CUSTOM_IDS].includes(selected))description=`圆键直径 ${state.circleSize} · 圆形触控直径 ${state.circleSize+2*o.padding} · 八键大小同步`;else if(['main','mini'].includes(selected))description=`画面 ${o.width} × ${o.width*.75} · 比例 4:3`;else description=`可见 ${o.width} × ${o.height} · ${['l','r'].includes(selected)?'L / R':'顶部四键'}大小同步`;$('#sizeReadout').textContent=description;}
-function exportData(){return {app:'Court Touch Lab',version:3,referenceSize:{width:W,height:H},device:'iPhone 17 Pro landscape',savedAt:new Date().toISOString(),layout:state,deltaMapping:deltaMapping(state),warnings:conflicts(state),note:'网页布局参数；摇杆使用圆形触控。deltaMapping 仅作位置尺寸参考，不包含网页摇杆的圆形触控逻辑。'};}
+function exportData(){return {app:'随心掌机',version:3,referenceSize:{width:W,height:H},device:'iPhone 17 Pro landscape',savedAt:new Date().toISOString(),layout:state,deltaMapping:deltaMapping(state),warnings:conflicts(state),note:'网页布局参数；摇杆使用圆形触控。deltaMapping 仅作位置尺寸参考，不包含网页摇杆的圆形触控逻辑。'};}
 function json(){return JSON.stringify(exportData(),null,2);}
 $('#download').onclick=()=>{const blob=new Blob([json()],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Delta-NDS-我的手感.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);toast('已导出；可把 JSON 文件发回聊天');};
 $('#copy').onclick=async()=>{try{await navigator.clipboard.writeText(json());toast('已复制完整布局参数');}catch{const t=$('#fallback');t.hidden=false;t.value=json();t.focus();t.select();toast('请长按下方文本框，选择全选并复制');}};

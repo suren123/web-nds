@@ -1,4 +1,4 @@
-import {W,H,rects,expanded,overlap,clone,CUSTOM_IDS} from './layout.mjs?v=7';
+import {W,H,rects,expanded,overlap,clone,CUSTOM_IDS} from './layout.mjs?v=8';
 export const circleControls=s=>rects(s).filter(r=>r.kind==='face'||r.kind==='custom');
 export const objectFor=(s,id)=>id==='dpad'?s.dpad:s.faces.find(r=>r.id===id)||s.buttons.find(r=>r.id===id)||s.screens[id];
 export function geometry(s,id){return rects(s).find(r=>r.id===id)||{id,...s.screens[id],height:s.screens[id].width*.75};}

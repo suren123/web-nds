@@ -1,4 +1,4 @@
-/* Court Touch Lab adapter. DeSmuME-wasm core: see core/NOTICE.html. */
+/* 随心掌机 adapter. DeSmuME-wasm core: see core/NOTICE.html. */
 let ready=false,loaded=false,running=false,mask=0,touch=null,next=0,timer,frames=0,fpsStart=0,saveDirty=false,loading=false;
 const FRAME_MS=1000/60;
 var Module={locateFile:p=>'core/'+p,print:()=>{},printErr:()=>{},onAbort:()=>postMessage({type:'error',message:'模拟器内核停止，请重新载入游戏'})};

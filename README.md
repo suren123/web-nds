@@ -1,4 +1,4 @@
-# Court NDS
+# 随心掌机
 
 可离线使用的 NDS 网页模拟器，针对 iPhone 横屏操作设计，带可调触控布局。
 
@@ -24,9 +24,9 @@
 
 ## 版本与发布
 
-`v0.1.0` 保存已运行的网页 v6 基线。`v0.2.0` 对应网页 v7，新增四个自定义圆键、分组尺寸、网格吸附与多选排列。可用 Git 对比和回退。
+`v0.1.0` 保存已运行的网页 v6 基线。`v0.2.0` 对应网页 v7，新增四个自定义圆键、分组尺寸、网格吸附与多选排列。`v0.2.1` 对应网页 v8，统一改名为「随心掌机」。可用 Git 对比和回退。
 
-主开发目录为 `/workspace/court-nds`。原 `/workspace/sites/court-touch-lab` 作为现有 Sites 仓库的发布镜像；发布时同步已提交源码，推送镜像仓库后部署。两者提交历史独立，不执行强制推送。
+主开发目录为 `/workspace/suixin-handheld`。原 `/workspace/sites/court-touch-lab` 作为现有 Sites 仓库的发布镜像；发布时同步已提交源码，推送镜像仓库后部署。两者提交历史独立，不执行强制推送。
 
 当前网址：https://court-touch-lab-17pro.awarejam67.chatgpt.site/
 

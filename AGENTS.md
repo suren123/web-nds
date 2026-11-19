@@ -1,4 +1,4 @@
-# Court NDS development
+# 随心掌机 development
 
 Read README.md for structure and publishing. This directory is the primary source and an independent Git repository. The existing /workspace/sites/court-touch-lab checkout is a deployment mirror with a separate history. Do not force-push or replace that history.
 
