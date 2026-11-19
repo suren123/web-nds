@@ -9,12 +9,12 @@ const root=require('node:path').resolve(__dirname,'../dist')+'/',origin='https:/
  let status;listeners.message({data:{type:'status'},ports:[{postMessage:d=>status=d}],waitUntil:x=>p=x});await p;assert.equal(status.ready,true);
  network=false;
  let response;listeners.fetch({request:{url:origin,method:'GET',mode:'navigate'},respondWith:x=>response=x});assert.match(await(await response).text(),/Web NDS/);
- const files=['app.mjs?v=0.0.1','layout.mjs?v=0.0.1','editor.mjs?v=0.0.1','viewport.mjs?v=0.0.1','emulator.mjs','storage.mjs','nds-worker.js','audio-worklet.js','core/nds.js','core/nds.wasm'];for(const f of files){listeners.fetch({request:{url:origin+f,method:'GET'},respondWith:x=>response=x});assert.ok((await(await response).arrayBuffer()).byteLength>0);}
+ const files=['app.mjs?v=0.0.1-layout2','layout.mjs?v=0.0.1-layout2','editor.mjs?v=0.0.1-layout2','viewport.mjs?v=0.0.1-layout2','emulator.mjs','storage.mjs','nds-worker.js','audio-worklet.js','core/nds.js','core/nds.wasm'];for(const f of files){listeners.fetch({request:{url:origin+f,method:'GET'},respondWith:x=>response=x});assert.ok((await(await response).arrayBuffer()).byteLength>0);}
  let intercepted=false;listeners.fetch({request:{url:'https://elsewhere.test/auth',method:'GET'},respondWith(){intercepted=true;}});assert.equal(intercepted,false);
  cacheMap.values().next().value.delete(origin+'core/nds.wasm');listeners.message({data:{type:'status'},ports:[{postMessage:d=>status=d}],waitUntil:x=>p=x});await p;assert.equal(status.ready,false);
  network=true;listeners.message({data:{type:'status',repair:true},ports:[{postMessage:d=>status=d}],waitUntil:x=>p=x});await p;assert.equal(status.ready,true);
- listeners.fetch({request:{url:origin+'update.html?v=0.0.1',method:'GET',mode:'navigate'},respondWith:x=>response=x});assert.match(await(await response).text(),/NDS 游戏库 <span class="build-label">v0.0.1/);
- network=false;listeners.fetch({request:{url:origin+'update.html?v=0.0.1',method:'GET',mode:'navigate'},respondWith:x=>response=x});const updateHTML=await(await response).text();assert.ok(!updateHTML.includes('id="rotate"'));assert.match(updateHTML,/id="portraitHint"/);
+ listeners.fetch({request:{url:origin+'update.html?v=0.0.1-layout2',method:'GET',mode:'navigate'},respondWith:x=>response=x});assert.match(await(await response).text(),/NDS 游戏库 <span class="build-label">v0.0.1/);
+ network=false;listeners.fetch({request:{url:origin+'update.html?v=0.0.1-layout2',method:'GET',mode:'navigate'},respondWith:x=>response=x});const updateHTML=await(await response).text();assert.ok(!updateHTML.includes('id="rotate"'));assert.match(updateHTML,/id="portraitHint"/);
  console.log('PASS update entry: new version online and cached fallback offline; no portrait blocking overlay');
  console.log('PASS offline handlers: complete local install, offline app/navigation/worker/WASM responses, missing cache detection, repair and origin isolation');
 })().catch(e=>{console.error(e);process.exitCode=1;});
