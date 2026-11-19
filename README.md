@@ -30,7 +30,7 @@
 
 主开发目录为 `/workspace/web-nds`。原 `/workspace/sites/court-touch-lab` 作为现有 Sites 仓库的发布镜像；发布时同步已提交源码，推送镜像仓库后部署。两者提交历史独立，不执行强制推送。
 
-当前网址：https://court-touch-lab-17pro.awarejam67.chatgpt.site/
+当前网址：https://suren123.github.io/web-nds/
 
 ## 许可与验证范围
 
@@ -55,3 +55,9 @@
 布局自动保存在当前站点的 localStorage（兼容键 `court-touch-layout-v1`）；游戏和存档在 IndexedDB（兼容库名 `court-nds-v1`）。改名不迁移存储标识或网址。不同浏览器、站点或独立应用环境不保证共享数据；可导出布局 JSON 和 .dsv 存档备份。
 
 自动化检查覆盖旋转事件合并、滚动校正、键盘及缩放处理、固定画布尺寸与配置保存；不能代替 iPhone Safari 真机验证。
+
+## GitHub Pages
+
+推送 main 后自动测试并将 dist/ 发布到 https://suren123.github.io/web-nds/ 。部署工作流为 `.github/workflows/pages.yml`，无需额外构建。
+
+旧站与 GitHub Pages 的本地存储独立：迁移时先在旧站导出布局 JSON、游戏存档 .dsv，再在新站导入并重新选择本地游戏文件。

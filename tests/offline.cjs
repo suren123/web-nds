@@ -1,9 +1,9 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const root=require('node:path').resolve(__dirname,'../dist')+'/',origin='https://court.test/';
+const root=require('node:path').resolve(__dirname,'../dist')+'/',origin='https://court.test'+(process.env.TEST_BASE||'/');
 (async()=>{
  const listeners={},cacheMap=new Map();let network=true;
  const caches={async open(name){if(!cacheMap.has(name))cacheMap.set(name,new Map());const c=cacheMap.get(name);return {async match(r){return c.get(typeof r==='string'?r:r.url)?.clone();},async put(r,v){c.set(typeof r==='string'?r:r.url,v.clone());}};},async keys(){return [...cacheMap.keys()];},async delete(k){return cacheMap.delete(k);}};
- const context={caches,URL,Request,DataView,Promise,fetch:async r=>{if(!network)throw Error('offline');const u=new URL(typeof r==='string'?r:r.url);const data=fs.readFileSync(root+u.pathname.slice(1));const res=new Response(data);Object.defineProperty(res,'url',{value:u.href});return res;},self:{registration:{scope:origin},location:{origin:'https://court.test'},clients:{claim:async()=>{}},skipWaiting:async()=>{},addEventListener:(t,fn)=>listeners[t]=fn}};
+ const context={caches,URL,Request,DataView,Promise,fetch:async r=>{if(!network)throw Error('offline');const u=new URL(typeof r==='string'?r:r.url);const data=fs.readFileSync(root+u.pathname.slice(new URL(origin).pathname.length));const res=new Response(data);Object.defineProperty(res,'url',{value:u.href});return res;},self:{registration:{scope:origin},location:{origin:'https://court.test'},clients:{claim:async()=>{}},skipWaiting:async()=>{},addEventListener:(t,fn)=>listeners[t]=fn}};
  vm.createContext(context);vm.runInContext(fs.readFileSync(root+'sw.js','utf8'),context);
  let p;listeners.install({waitUntil:x=>p=x});await p;listeners.activate({waitUntil:x=>p=x});await p;
  let status;listeners.message({data:{type:'status'},ports:[{postMessage:d=>status=d}],waitUntil:x=>p=x});await p;assert.equal(status.ready,true);
