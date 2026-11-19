@@ -2,7 +2,27 @@ export const KEY_ORDER=['right','left','down','up','select','start','b','a','y',
 export function keyMask(keys){let n=0;for(const k of keys){const i=KEY_ORDER.indexOf(k);if(i>=0)n|=1<<i;}return n;}
 export class NDSEngine{
  constructor({onSave,onStatus,onError,onFPS}){Object.assign(this,{onSave,onStatus,onError,onFPS});this.screens=[0,1].map(()=>Object.assign(document.createElement('canvas'),{width:256,height:192}));this.contexts=this.screens.map(c=>c.getContext('2d'));this.pending=new Map();this.seq=0;this.queue=[];this.offset=0;this.muted=false;}
- async sound(){try{if(!this.audio){this.audio=new (window.AudioContext||window.webkitAudioContext)({sampleRate:44100,latencyHint:'interactive'});this.audio.resume();if(this.audio.audioWorklet){try{await this.audio.audioWorklet.addModule('audio-worklet.js');this.node=new AudioWorkletNode(this.audio,'court-audio',{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[2]});}catch{}}if(!this.node){this.node=this.audio.createScriptProcessor(2048,0,2);this.node.onaudioprocess=e=>{const l=e.outputBuffer.getChannelData(0),r=e.outputBuffer.getChannelData(1);for(let i=0;i<l.length;i++){const a=this.queue[0];if(!a)break;l[i]=a[this.offset++]/32768;r[i]=a[this.offset++]/32768;if(this.offset>=a.length){this.offset=0;this.queue.shift();}}};}this.node.connect(this.audio.destination);}await this.audio.resume();}catch{this.onStatus('声音暂不可用，游戏仍可运行');}}
+ async sound(){
+  if(this.muted)return;
+  try{
+   // Call resume immediately while a tap still counts as a Safari user gesture.
+   if(this.audio?.state==='closed'){this.audio=null;this.node=null;}
+   if(!this.audio){
+    this.audio=new (window.AudioContext||window.webkitAudioContext)({sampleRate:44100,latencyHint:'interactive'});
+   }
+   const audio=this.audio;
+   const resume=audio.state==='running'?Promise.resolve():audio.resume();
+   if(!this.node&&!this.audioSetup){
+    this.audioSetup=(async()=>{
+     if(audio.audioWorklet){try{await audio.audioWorklet.addModule('audio-worklet.js');this.node=new AudioWorkletNode(audio,'court-audio',{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[2]});}catch{}}
+     if(!this.node){this.node=audio.createScriptProcessor(2048,0,2);this.node.onaudioprocess=e=>{const l=e.outputBuffer.getChannelData(0),r=e.outputBuffer.getChannelData(1);for(let i=0;i<l.length;i++){const a=this.queue[0];if(!a)break;l[i]=a[this.offset++]/32768;r[i]=a[this.offset++]/32768;if(this.offset>=a.length){this.offset=0;this.queue.shift();}}};}
+     this.node.connect(audio.destination);
+    })().finally(()=>{this.audioSetup=null;});
+   }
+   await Promise.all([resume,this.audioSetup]);
+  }catch{this.onStatus('声音暂不可用，点一下游戏画面重试');}
+ }
+
  clearAudio(){this.node?.port?.postMessage({clear:true});this.queue=[];this.offset=0;}
  setMuted(v){this.muted=v;this.clearAudio();}
  setInput(keys,touch){if(this.loaded)this.worker.postMessage({type:'input',mask:keyMask(keys),touch});}
@@ -25,7 +45,7 @@ export class NDSEngine{
    };
   });
  }
- resume(){if(!this.loaded)return;this.clearAudio();this.running=true;this.worker.postMessage({type:'resume'});}
+ resume(){if(!this.loaded)return;this.clearAudio();this.running=true;this.worker.postMessage({type:'resume'});if(!this.muted)this.sound();}
  pause(){this.running=false;this.clearAudio();this.worker?.postMessage({type:'pause'});}
  save(){if(!this.loaded)return Promise.resolve(new Uint8Array());const id=++this.seq;return new Promise((resolve,reject)=>{const t=setTimeout(()=>{this.pending.delete(id);reject(Error('读取存档超时'));},5000);this.pending.set(id,{resolve:v=>{clearTimeout(t);resolve(v);},reject:e=>{clearTimeout(t);reject(e);}});this.worker.postMessage({type:'save',id});});}
  stop(){this.running=false;this.loaded=false;this.clearAudio();this.worker?.terminate();this.worker=null;for(const p of this.pending.values())p.reject(Error('模拟器已关闭'));this.pending.clear();}

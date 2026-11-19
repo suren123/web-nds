@@ -1,8 +1,8 @@
-import {installViewport} from './viewport.mjs?v=0.0.1-layout2';
-import {objectFor,geometry,snapPosition,alignControls,arrangeEight,placeAddedControls} from './editor.mjs?v=0.0.1-layout2';
+import {installViewport} from './viewport.mjs?v=0.0.1-audio2';
+import {objectFor,geometry,snapPosition,alignControls,arrangeEight,placeAddedControls} from './editor.mjs?v=0.0.1-audio2';
 import {NDSEngine} from './emulator.mjs';
 import {dbGet,dbPut,dbDelete,romIdentity} from './storage.mjs';
-import {W,H,DEFAULT,clone,rects,screens,expanded,contains,conflicts,hit,inputsAt,held,deltaMapping,validState,arrangeRows,applyOpacity,applySizes,CUSTOM_IDS,MENU_IDS,ASSIGNABLE} from './layout.mjs?v=0.0.1-layout2';
+import {W,H,DEFAULT,clone,rects,screens,expanded,contains,conflicts,hit,inputsAt,held,deltaMapping,validState,arrangeRows,applyOpacity,applySizes,CUSTOM_IDS,MENU_IDS,ASSIGNABLE} from './layout.mjs?v=0.0.1-audio2';
 const $=s=>document.querySelector(s),board=$('#board'),STORAGE='court-touch-layout-v1',controlLayers=new Map();
 let ctx=board.getContext('2d');
 // Keep backing buffers independent of Safari's animated viewport. CSS scales the canvas.
@@ -119,7 +119,7 @@ const engine=new NDSEngine({
 function openGame(){release();engine.pause();$('#gameDialog').showModal();$('#resumeGame').disabled=!engine.loaded;}
 $('#gameOpen').onclick=openGame;
 $('#gameClose').onclick=()=>$('#gameDialog').close();
-$('#gameDialog').addEventListener('close',()=>{release();if(engine.loaded&&!editing&&!document.hidden)engine.resume();});
+$('#gameDialog').addEventListener('close',()=>{release();if(engine.loaded&&!editing&&!document.hidden){engine.sound();engine.resume();}});
 $('#resumeGame').onclick=()=>{$('#gameDialog').close();$('#focus').click();engine.sound();};
 $('#pauseGame').onclick=()=>{if(!engine.loaded){openGame();return;}if(engine.running){openGame();}else{engine.sound();engine.resume();}};
 $('#hideBottom').onclick=()=>{remember();release();state.hideBottom=!state.hideBottom;if(state.hideBottom)state.swapped=false;updated();$('#hideBottom').textContent=state.hideBottom?'显示下屏':'隐藏下屏';};
@@ -150,8 +150,9 @@ $('#saveFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if
 $('#forgetROM').onclick=async()=>{if(!confirm('移除手机里保留的游戏文件？游戏存档和按键布局会保留。'))return;try{await dbDelete('recent');await refreshRecent();toast('离线游戏副本已移除');}catch{toast('移除失败，请重试');}};
 window.addEventListener('blur',()=>{if(engine.loaded){engine.pause();$('#gameStatus').textContent='已暂停，点击继续游戏';}});
 window.addEventListener('pagehide',()=>engine.pause());
-document.addEventListener('visibilitychange',()=>{if(document.hidden){release();engine.pause();}else if(engine.loaded&&!$('#gameDialog').open)openGame();});
-board.addEventListener('pointerdown',()=>{if(engine.loaded&&!engine.running&&!editing&&!$('#gameDialog').open&&!document.body.classList.contains('panel')){engine.sound();engine.resume();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){release();engine.pause();}else if(engine.loaded){engine.sound();if(!$('#gameDialog').open)openGame();}});
+window.addEventListener('pageshow',()=>{if(engine.loaded&&!document.hidden&&!engine.muted)engine.sound();});
+board.addEventListener('pointerdown',()=>{if(engine.loaded&&!engine.muted&&!$('#gameDialog').open)engine.sound();if(engine.loaded&&!engine.running&&!editing&&!$('#gameDialog').open&&!document.body.classList.contains('panel'))engine.resume();});
 async function offlineStatus(){
  if(!('serviceWorker' in navigator)){$('#offlineStatus').textContent='此浏览器不支持离线缓存';return;}
  try{
