@@ -1,0 +1,12 @@
+{
+  "name": "court-nds",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-2.0",
+  "scripts": {
+    "test": "node test.mjs",
+    "dev": "python3 -m http.server 4173 --bind 0.0.0.0 --directory dist",
+    "package": "python3 scripts/package.py"
+  }
+}

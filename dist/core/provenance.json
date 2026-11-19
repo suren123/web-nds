@@ -1,0 +1,8 @@
+{
+  "upstream": "https://github.com/NotImplementedLife/desmume-wasm/releases/tag/build-wasm",
+  "source": "https://github.com/NotImplementedLife/desmume-wasm/tree/build-wasm",
+  "sha256": {
+    "nds.js": "3f85dcdae6006ef1ce8cc5f76a4f9c2a5153d2efb7436d109f9b7938a1386e99",
+    "nds.wasm": "36974ce78d01e5360b1213d9b018f90181503c10d9b1d35a5e7d8424f93ab2bd"
+  }
+}
