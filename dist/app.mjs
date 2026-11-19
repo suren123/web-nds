@@ -1,8 +1,8 @@
-import {installViewport} from './viewport.mjs?v=9';
-import {objectFor,geometry,snapPosition,alignControls,arrangeEight,placeAddedControls} from './editor.mjs?v=9';
+import {installViewport} from './viewport.mjs?v=10';
+import {objectFor,geometry,snapPosition,alignControls,arrangeEight,placeAddedControls} from './editor.mjs?v=10';
 import {NDSEngine} from './emulator.mjs';
 import {dbGet,dbPut,dbDelete,romIdentity} from './storage.mjs';
-import {W,H,DEFAULT,clone,rects,screens,expanded,contains,conflicts,hit,inputsAt,held,deltaMapping,validState,arrangeRows,applyOpacity,applySizes,CUSTOM_IDS,MENU_IDS,ASSIGNABLE} from './layout.mjs?v=9';
+import {W,H,DEFAULT,clone,rects,screens,expanded,contains,conflicts,hit,inputsAt,held,deltaMapping,validState,arrangeRows,applyOpacity,applySizes,CUSTOM_IDS,MENU_IDS,ASSIGNABLE} from './layout.mjs?v=10';
 const $=s=>document.querySelector(s),board=$('#board'),STORAGE='court-touch-layout-v1',controlLayers=new Map();
 let ctx=board.getContext('2d');
 // Keep backing buffers independent of Safari's animated viewport. CSS scales the canvas.

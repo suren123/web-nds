@@ -58,8 +58,8 @@ body{overflow-anchor:none}
 body.focus{position:fixed;top:0;left:0;right:0;height:var(--app-height,100svh);min-height:0;padding:0}
 aside{bottom:auto;height:var(--app-height,100svh)}
 @media(orientation:landscape){
- body.focus main{padding:var(--game-safe-top) var(--game-safe-right) var(--game-safe-bottom) var(--game-safe-left)}
- body.focus .canvas-wrap{width:min(calc(100vw - var(--game-safe-left) - var(--game-safe-right)),calc((var(--app-height,100svh) - var(--game-safe-top) - var(--game-safe-bottom)) * 874 / 402));height:auto;aspect-ratio:874/402}
+ body.focus main{padding:0}
+ body.focus .canvas-wrap{width:min(100vw,calc(var(--app-height,100svh) * 874 / 402));height:auto;aspect-ratio:874/402;box-shadow:none}
  body.panel.focus main{padding:8px 12px 8px max(12px,var(--game-safe-left))}
  body.panel.focus .canvas-wrap{width:100%;height:auto;max-width:calc((var(--app-height,100svh) - 16px) * 874 / 402)}
 }
