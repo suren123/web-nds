@@ -1,14 +1,17 @@
 export const W=874,H=402;
-export const DEFAULT={"version":2,"hideBottom":false,"swapped":false,"dpad":{"x":68,"y":236,"size":141,"padding":38,"opacity":85},"faces":[{"id":"x","x":700,"y":211,"size":62,"padding":4,"opacity":85},{"id":"y","x":609,"y":205,"size":62,"padding":4,"opacity":85},{"id":"a","x":705,"y":311,"size":62,"padding":4,"opacity":85},{"id":"b","x":610,"y":312,"size":62,"padding":4,"opacity":85}],"screens":{"main":{"x":255,"y":89,"width":400},"mini":{"x":42,"y":70,"width":160}},"buttons":[{"id":"l","label":"L","x":32,"y":12,"width":160,"height":44,"padding":0,"inputs":["l"],"opacity":85},{"id":"r","label":"R","x":698,"y":3,"width":170,"height":44,"padding":0,"inputs":["r"],"opacity":85},{"id":"comboA","label":"L + R + A","x":614,"y":130,"width":170,"height":46,"padding":0,"inputs":["l","r","a"],"opacity":85},{"id":"comboB","label":"L + R + B","x":617,"y":74,"width":170,"height":46,"padding":0,"inputs":["l","r","b"],"opacity":85},{"id":"menu","label":"MENU","x":215,"y":12,"width":84,"height":36,"padding":0,"inputs":["menu"],"opacity":85},{"id":"select","label":"SELECT","x":321,"y":3,"width":88,"height":36,"padding":0,"inputs":["select"],"opacity":85},{"id":"start","label":"START","x":442,"y":3,"width":84,"height":36,"padding":0,"inputs":["start"],"opacity":85},{"id":"swap","label":"SWAP","x":556,"y":8,"width":114,"height":36,"padding":0,"inputs":["reverseScreens"],"opacity":85}],"controlsOpacity":85};
+export const DEFAULT={"version":3,"hideBottom":false,"swapped":false,"dpad":{"x":68,"y":236,"size":141,"padding":38,"opacity":85},"faces":[{"id":"x","x":700,"y":211,"size":62,"padding":4,"opacity":85},{"id":"y","x":609,"y":205,"size":62,"padding":4,"opacity":85},{"id":"a","x":705,"y":311,"size":62,"padding":4,"opacity":85},{"id":"b","x":610,"y":312,"size":62,"padding":4,"opacity":85}],"screens":{"main":{"x":255,"y":89,"width":400},"mini":{"x":42,"y":70,"width":160}},"buttons":[{"id":"l","label":"L","x":32,"y":12,"width":170,"height":44,"padding":0,"inputs":["l"],"opacity":85},{"id":"r","label":"R","x":698,"y":3,"width":170,"height":44,"padding":0,"inputs":["r"],"opacity":85},{"id":"comboA","label":"L + R + A","x":614,"y":130,"width":62,"height":62,"padding":4,"inputs":["l","r","a"],"opacity":85,"customLabel":""},{"id":"comboB","label":"L + R + B","x":617,"y":60,"width":62,"height":62,"padding":4,"inputs":["l","r","b"],"opacity":85,"customLabel":""},{"id":"menu","label":"MENU","x":215,"y":12,"width":88,"height":36,"padding":0,"inputs":["menu"],"opacity":85},{"id":"select","label":"SELECT","x":321,"y":3,"width":88,"height":36,"padding":0,"inputs":["select"],"opacity":85},{"id":"start","label":"START","x":442,"y":3,"width":88,"height":36,"padding":0,"inputs":["start"],"opacity":85},{"id":"swap","label":"SWAP","x":556,"y":8,"width":88,"height":36,"padding":0,"inputs":["reverseScreens"],"opacity":85},{"id":"custom3","label":"L + R","x":790,"y":90,"width":62,"height":62,"padding":4,"inputs":["l","r"],"opacity":85,"customLabel":""},{"id":"custom4","label":"未设置","x":790,"y":168,"width":62,"height":62,"padding":4,"inputs":[],"opacity":85,"customLabel":""}],"controlsOpacity":85,"circleSize":62,"menuSize":{"width":88,"height":36},"shoulderSize":{"width":170,"height":44},"editor":{"grid":true,"snap":true,"gridSize":8}};
+export const CUSTOM_IDS=['comboA','comboB','custom3','custom4'];
+export const MENU_IDS=['menu','select','start','swap'];
+export const ASSIGNABLE=['l','r','a','b','x','y','start','select'];
 export const clone=v=>JSON.parse(JSON.stringify(v));
 export function rects(s){
  const d=s.dpad;
  const a=[{id:'dpad',kind:'dpad',x:d.x,y:d.y,width:d.size,height:d.size,padding:d.padding,opacity:d.opacity??100}];
  for(const f of s.faces)a.push({...f,kind:'face',label:f.id.toUpperCase(),inputs:[f.id],width:f.size,height:f.size});
- return a.concat(s.buttons.map(b=>({...b,kind:'button'})));
+ return a.concat(s.buttons.map(b=>({...b,kind:CUSTOM_IDS.includes(b.id)?'custom':'button'})));
 }
 export function screens(s){return Object.entries(s.screens).map(([id,r])=>({id,...r,height:r.width*.75,touch:(id==='main')===s.swapped})).filter(r=>!s.hideBottom||!r.touch);}
-export const expanded=r=>({x:r.x-r.padding,y:r.y-r.padding,width:r.width+2*r.padding,height:r.height+2*r.padding,shape:r.kind==='dpad'?'circle':'rect'});
+export const expanded=r=>({x:r.x-r.padding,y:r.y-r.padding,width:r.width+2*r.padding,height:r.height+2*r.padding,shape:['dpad','face','custom'].includes(r.kind)?'circle':'rect'});
 export const contains=(r,p)=>r.shape==='circle'?Math.hypot(p.x-r.x-r.width/2,p.y-r.y-r.height/2)<=r.width/2:p.x>=r.x&&p.y>=r.y&&p.x<r.x+r.width&&p.y<r.y+r.height;
 export function overlap(a,b){if(a.shape==='circle'&&b.shape==='circle')return Math.hypot(a.x+a.width/2-b.x-b.width/2,a.y+a.height/2-b.y-b.height/2)<(a.width+b.width)/2;if(a.shape==='circle'||b.shape==='circle'){const c=a.shape==='circle'?a:b,r=c===a?b:a,cx=c.x+c.width/2,cy=c.y+c.height/2;return Math.hypot(cx-Math.max(r.x,Math.min(cx,r.x+r.width)),cy-Math.max(r.y,Math.min(cy,r.y+r.height)))<c.width/2;}return Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x)>0.01&&Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y)>0.01;}
 
@@ -23,18 +26,26 @@ export function deltaMapping(s){s={...s,hideBottom:false};const items=rects(s).m
  const scr=screens(s),touch=scr.find(r=>r.touch);items.push({inputs:{x:'touchScreenX',y:'touchScreenY'},frame:{x:touch.x,y:touch.y,width:touch.width,height:touch.height},extendedEdges:{top:0,bottom:0,left:0,right:0}});
  return {mappingSize:{width:W,height:H},items,screens:scr.map(r=>({inputFrame:{x:0,y:r.touch?192:0,width:256,height:192},outputFrame:{x:r.x,y:r.y,width:r.width,height:r.height}})),translucent:false};}
 export function arrangeRows(s){const cx=s.faces.reduce((n,f)=>n+f.x+f.size/2,0)/4,cy=s.faces.reduce((n,f)=>n+f.y+f.size/2,0)/4,gap=Math.max(88,...s.faces.map(f=>f.size+2*f.padding+12));for(const [id,dx,dy]of [['y',-1,-1],['x',1,-1],['b',-1,1],['a',1,1]]){const f=s.faces.find(f=>f.id===id);f.x=cx+dx*gap/2-f.size/2;f.y=cy+dy*gap/2-f.size/2;}return s;}
-export function validState(input){const x=input?.layout||input;if(!x||![1,2].includes(x.version))throw Error('文件不是调校台导出的布局');const s=clone(DEFAULT);const num=(v,min,max)=>{if(typeof v!=='number'||!Number.isFinite(v)||v<min||v>max)throw Error('布局数值超出范围');return v;};
+export function applySizes(s){
+ for(const f of s.faces)f.size=s.circleSize;
+ for(const b of s.buttons){if(CUSTOM_IDS.includes(b.id))b.width=b.height=s.circleSize;else Object.assign(b,['l','r'].includes(b.id)?s.shoulderSize:s.menuSize);}
+ return s;
+}
+export function validState(input){
+ const x=input?.layout||input;if(!x||![1,2,3].includes(x.version))throw Error('文件不是调校台导出的布局');
+ const s=clone(DEFAULT),num=(v,min,max)=>{if(typeof v!=='number'||!Number.isFinite(v)||v<min||v>max)throw Error('布局数值超出范围');return v;};
  if(typeof x.swapped!=='boolean')throw Error('屏幕状态无效');s.swapped=x.swapped;s.hideBottom=x.hideBottom===true;
- for(const k of ['x','y','size','padding'])s.dpad[k]=num(x.dpad?.[k],0,k==='padding'?80:k==='size'?240:k==='x'?W:H);
- s.dpad.opacity=num(x.dpad?.opacity??100,0,100);
- if(s.dpad.size<48)throw Error('方向键过小');
+ for(const k of ['x','y','size','padding'])s.dpad[k]=num(x.dpad?.[k],k==='size'?48:0,k==='padding'?80:k==='size'?240:k==='x'?W:H);
  if(x.version===1){const f={};for(const k of ['cx','cy','size','spacing','padding'])f[k]=num(x.face?.[k],0,k==='padding'?40:k==='size'?100:k==='spacing'?130:k==='cx'?W:H);if(f.size<24||f.spacing<24)throw Error('圆键尺寸无效');s.faces=[['x',0,-1],['y',-1,0],['a',1,0],['b',0,1]].map(([id,dx,dy])=>({id,x:f.cx+dx*f.spacing-f.size/2,y:f.cy+dy*f.spacing-f.size/2,size:f.size,padding:f.padding,opacity:85}));}
- else{if(!Array.isArray(x.faces)||x.faces.length!==4||new Set(x.faces.map(f=>f.id)).size!==4)throw Error('四键数据不完整');for(const f of s.faces){const src=x.faces.find(z=>z.id===f.id);for(const k of ['x','y','size','padding','opacity'])f[k]=num(src?.[k],k==='size'?24:0,k==='x'?W:k==='y'?H:k==='size'?100:k==='padding'?40:100);}}
+ else{if(!Array.isArray(x.faces)||x.faces.length!==4||new Set(x.faces.map(f=>f.id)).size!==4)throw Error('四键数据不完整');for(const f of s.faces){const src=x.faces.find(z=>z.id===f.id);for(const k of ['x','y','size','padding'])f[k]=num(src?.[k],k==='size'?24:0,k==='x'?W:k==='y'?H:k==='size'?100:40);}}
  for(const id of ['main','mini'])for(const k of ['x','y','width'])s.screens[id][k]=num(x.screens?.[id]?.[k],k==='width'?60:0,k==='y'?H:W);
- if(!Array.isArray(x.buttons)||x.buttons.length!==s.buttons.length)throw Error('按键数据不完整');
- for(const b of s.buttons){const src=x.buttons.find(z=>z.id===b.id);for(const k of ['x','y','width','height','padding'])b[k]=num(src?.[k],['width','height'].includes(k)?20:0,k==='padding'?40:k==='height'?160:k==='y'?H:W);}
- for(const b of s.buttons)b.opacity=num(x.buttons.find(z=>z.id===b.id)?.opacity??100,0,100);
- const comboA=s.buttons.find(b=>b.id==='comboA'),comboB=s.buttons.find(b=>b.id==='comboB');comboB.width=comboA.width;comboB.height=comboA.height;
- applyOpacity(s,num(x.controlsOpacity??x.faces?.find(f=>f.id==='a')?.opacity??85,0,100));
+ const expected=x.version===3?10:8;if(!Array.isArray(x.buttons)||x.buttons.length!==expected||new Set(x.buttons.map(b=>b.id)).size!==expected)throw Error('按键数据不完整');
+ for(const b of s.buttons){const src=x.buttons.find(z=>z.id===b.id);if(!src&&x.version<3&&['custom3','custom4'].includes(b.id))continue;if(!src)throw Error('按键数据不完整');for(const k of ['x','y','width','height','padding'])b[k]=num(src[k],['width','height'].includes(k)?20:0,k==='padding'?40:k==='height'?160:k==='y'?H:W);
+  if(CUSTOM_IDS.includes(b.id)){const inputs=src.inputs;if(!Array.isArray(inputs)||inputs.some(k=>!ASSIGNABLE.includes(k))||new Set(inputs).size!==inputs.length)throw Error('自定义按键组合无效');b.inputs=[...inputs];if(src.customLabel!==undefined&&(typeof src.customLabel!=='string'||src.customLabel.length>8))throw Error('自定义名称最多 8 个字符');b.customLabel=src.customLabel||'';b.label=b.inputs.map(k=>k.toUpperCase()).join(' + ')||'未设置';}
+ }
+ s.circleSize=num(x.version===3?x.circleSize:s.faces.find(f=>f.id==='a').size,24,100);
+ for(const [group,defaultValue]of [['menuSize',{width:88,height:36}],['shoulderSize',{width:170,height:44}]])for(const k of ['width','height'])s[group][k]=num(x.version===3?x[group]?.[k]:defaultValue[k],20,k==='width'?240:100);
+ if(x.version===3){if(typeof x.editor?.grid!=='boolean'||typeof x.editor?.snap!=='boolean')throw Error('网格设置无效');s.editor={grid:x.editor.grid,snap:x.editor.snap,gridSize:num(x.editor.gridSize,4,32)};}
+ applySizes(s);applyOpacity(s,num(x.controlsOpacity??x.faces?.find(f=>f.id==='a')?.opacity??85,0,100));
  return s;
 }
