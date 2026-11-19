@@ -17,7 +17,7 @@ for(const [key,values]of [['comboInput',['a','b','x','y','l','r','start','select
 const board=createCanvas(874,402);board.listeners={};for(const k of ['addEventListener','emit','getBoundingClientRect','setPointerCapture'])board[k]=Element.prototype[k];els.set('#board',board);
 globalThis.document={querySelector:el,querySelectorAll:s=>arrays.get(s)||[],createElement:t=>t==='canvas'?createCanvas(1,1):new Element(t.toUpperCase()),body:new Element(),documentElement:new Element(),addEventListener(k,f){(documentEvents[k]??=[]).push(f);}};
 globalThis.window={addEventListener(k,f){(windowEvents[k]??=[]).push(f);}};globalThis.indexedDB=indexedDB;globalThis.devicePixelRatio=1;
-let frame,copied,worker,savedLayout;globalThis.requestAnimationFrame=f=>frame=f;globalThis.localStorage={getItem(){return null;},setItem(k,v){savedLayout=v;}};
+let frame,copied,worker,savedLayout;globalThis.requestAnimationFrame=f=>frame=f;globalThis.localStorage={getItem(){return null;},setItem(k,v){if(k==='court-touch-layout-v1')savedLayout=v;}};
 Object.defineProperty(globalThis,'navigator',{value:{clipboard:{async writeText(v){copied=JSON.parse(v);}}},configurable:true});
 globalThis.Worker=class{constructor(){worker=this;this.messages=[];queueMicrotask(()=>this.onmessage({data:{type:'ready'}}));}postMessage(d){this.messages.push(d);if(d.type==='load')queueMicrotask(()=>this.onmessage({data:{type:'loaded'}}));if(d.type==='save')queueMicrotask(()=>this.onmessage({data:{type:'save',id:d.id,bytes:new Uint8Array()}}));}terminate(){}};
 const {dbPut}=await import('../dist/storage.mjs');const header=new Uint8Array(1024),view=new DataView(header.buffer);view.setUint32(0x20,512,true);view.setUint32(0x2c,4,true);view.setUint32(0x30,516,true);view.setUint32(0x3c,4,true);const file=new File([header],'test.nds');await dbPut('recent',{file,name:file.name});
@@ -50,3 +50,5 @@ frame();console.log('PASS UI: custom checkbox assignment/name, synchronized dime
 
 
 await new Promise(r=>setTimeout(r,200));assert.deepEqual(JSON.parse(savedLayout),await exportState());console.log('PASS local layout persistence and stable canvas buffers through rotation');
+
+assert.equal(el('#fpsOverlay').hidden,true);el('#showFPS').onchange({target:{checked:true}});worker.onmessage({data:{type:'fps',value:58.7}});frame();assert.equal(el('#fpsOverlay').textContent,'59 FPS');el('#showFPS').onchange({target:{checked:false}});assert.equal(el('#fpsOverlay').hidden,true);console.log('PASS FPS overlay toggle and emulator FPS reporting');

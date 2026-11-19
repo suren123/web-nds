@@ -1,8 +1,8 @@
-import {installViewport} from './viewport.mjs?v=10';
-import {objectFor,geometry,snapPosition,alignControls,arrangeEight,placeAddedControls} from './editor.mjs?v=10';
+import {installViewport} from './viewport.mjs?v=11';
+import {objectFor,geometry,snapPosition,alignControls,arrangeEight,placeAddedControls} from './editor.mjs?v=11';
 import {NDSEngine} from './emulator.mjs';
 import {dbGet,dbPut,dbDelete,romIdentity} from './storage.mjs';
-import {W,H,DEFAULT,clone,rects,screens,expanded,contains,conflicts,hit,inputsAt,held,deltaMapping,validState,arrangeRows,applyOpacity,applySizes,CUSTOM_IDS,MENU_IDS,ASSIGNABLE} from './layout.mjs?v=10';
+import {W,H,DEFAULT,clone,rects,screens,expanded,contains,conflicts,hit,inputsAt,held,deltaMapping,validState,arrangeRows,applyOpacity,applySizes,CUSTOM_IDS,MENU_IDS,ASSIGNABLE} from './layout.mjs?v=11';
 const $=s=>document.querySelector(s),board=$('#board'),STORAGE='court-touch-layout-v1',controlLayers=new Map();
 let ctx=board.getContext('2d');
 // Keep backing buffers independent of Safari's animated viewport. CSS scales the canvas.
@@ -73,7 +73,13 @@ function updateActive(){if(editing)return;active=held(state,pointers.values());f
 function circle(x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
 function round(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}}
 function text(t,x,y,size=12,color='#e9f3ed',align='center',weight=500){ctx.fillStyle=color;ctx.font=`${weight} ${size}px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif`;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(t,x,y);}
+let showFPS=false,lastFPS=null,lastFPSTime=0;
+try{showFPS=localStorage.getItem('web-nds-show-fps')==='true';}catch{}
+$('#showFPS').checked=showFPS;$('#fpsOverlay').hidden=!showFPS;
+$('#showFPS').onchange=e=>{showFPS=e.target.checked;$('#fpsOverlay').hidden=!showFPS;try{localStorage.setItem('web-nds-show-fps',String(showFPS));}catch{toast('无法保存帧率开关设置');}};
 function draw(){
+ if(showFPS){const label=!engine.loaded?'FPS —':!engine.running?'已暂停':lastFPS===null||performance.now()-lastFPSTime>5000?'FPS —':lastFPS.toFixed(0)+' FPS';if($('#fpsOverlay').textContent!==label)$('#fpsOverlay').textContent=label;}
+
  const box=board.getBoundingClientRect();ctx.setTransform(board.width/W,0,0,board.height/H,0,0);scale=box.width/W;const scaleText='显示比例 '+Math.round(scale*100)+'%';if($('#scale').textContent!==scaleText)$('#scale').textContent=scaleText;
  ctx.fillStyle='#102a35';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#1c3d48';ctx.lineWidth=1;for(let x=-H;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,H);ctx.lineTo(x+H,0);ctx.stroke();}
  for(const s of screens(state)){round(s.x-5,s.y-5,s.width+10,s.height+10,8,'#061b24','#2c5260');ctx.fillStyle='#0a2430';ctx.fillRect(s.x,s.y,s.width,s.height);
@@ -108,7 +114,7 @@ let gameId=null,gameFile=null,busy=false,resumeAfterPanel=false;
 const engine=new NDSEngine({
  onSave:async bytes=>{if(!gameId)return;await dbPut('save:'+gameId,bytes);$('#saveStatus').textContent='游戏存档已保存在此设备 · '+new Date().toLocaleTimeString();},
  onStatus:t=>{$('#gameStatus').textContent=t;},onError:t=>{$('#gameStatus').textContent=t;toast(t);},
- onFPS:n=>{$('#fps').textContent=n.toFixed(0)+' FPS';}
+ onFPS:n=>{if(Number.isFinite(n)){lastFPS=n;lastFPSTime=performance.now();$('#fps').textContent=n.toFixed(0)+' FPS';}}
 });
 function openGame(){release();engine.pause();$('#gameDialog').showModal();$('#resumeGame').disabled=!engine.loaded;}
 $('#gameOpen').onclick=openGame;

@@ -63,3 +63,5 @@ aside{bottom:auto;height:var(--app-height,100svh)}
  body.panel.focus main{padding:8px 12px 8px max(12px,var(--game-safe-left))}
  body.panel.focus .canvas-wrap{width:100%;height:auto;max-width:calc((var(--app-height,100svh) - 16px) * 874 / 402)}
 }
+
+#fpsOverlay{position:absolute;top:8px;right:max(8px,env(safe-area-inset-right));z-index:2;pointer-events:none;padding:4px 7px;border-radius:6px;background:#061b24cc;color:#c4ec72;font:600 12px/1.4 ui-monospace,monospace;font-variant-numeric:tabular-nums}
